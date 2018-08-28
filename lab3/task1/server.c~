@@ -1,0 +1,52 @@
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
+#include <string.h>
+#include <sys/types.h>
+#include <time.h>
+
+int main(int argc, char *argv[])
+{
+    	int serverfd = 0, clientfd = 0;
+    	struct sockaddr_in serv_addr;
+    	char sendBuff[1025];
+    	time_t ticks;
+	//socket() creates an endpoint for communication and returns a file descriptor that refers to that endpoint.
+    	serverfd = socket(AF_INET, SOCK_STREAM, 0);
+	//The memset() function fills the first sizeof(serv_addr) bytes of the memory area pointed to by serv_addr with the constant byte 0.
+    	memset(&serv_addr, '0', sizeof(serv_addr));
+    	memset(sendBuff, '0', sizeof(sendBuff));
+	/*struct sockaddr_in {
+               sa_family_t    sin_family;  [address family: AF_INET] 
+               in_port_t      sin_port;    [port in network byte order]
+               struct in_addr sin_addr;   [internet address]
+           }
+	Internet address
+           struct in_addr {
+               uint32_t       s_addr;     [address in network byte order]
+           };*/
+	//uint32_t htonl(uint32_t hostlong);
+        //uint16_t htons(uint16_t hostshort);
+	// converted from host to network byte order
+    	serv_addr.sin_family = AF_INET;
+    	serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    	serv_addr.sin_port = htons(5000);
+	//bind() assigns the address specified by addr to the socket referred to by the file descriptor serverfd.  
+    	bind(serverfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
+	//socket that will be used to accept incoming connection requests
+	//size of the the queue of pending connections is 1
+	//severfd is automatically bound to a random free port with the local address set to INADDR_ANY
+    	listen(serverfd, 1);
+	//accept a connection between serverfd and clientfd
+    	while(1){
+    	clientfd = accept(serverfd, (struct sockaddr*)NULL, NULL);
+	
+		snprintf(sendBuff, sizeof(sendBuff), "Hello World\n");
+    		write(clientfd, sendBuff, strlen(sendBuff));
+	}
+    	close(clientfd);
+}
